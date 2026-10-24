@@ -1,8 +1,10 @@
 /**
- * 从 heron 仓库的用户手册生成站内内容。
+ * 从用户手册生成站内内容。
  *
- * 源文件默认 ../heron/docs/user-manual.md，可用环境变量 HERON_MANUAL 覆盖。
- * astro build / dev 前自动跑一遍（见 package.json 的 prebuild），所以内容永远跟着仓库走。
+ * 默认源是仓库内的 docs/user-manual.md（随仓库一起提交，保证克隆下来就能构建）。
+ * 想用 heron 仓库里的最新版，跑一次：
+ *   HERON_MANUAL=../heron/docs/user-manual.md npm run build
+ * astro build / dev 前自动跑一遍（见 package.json 的 prebuild）。
  *
  * 站内只呈现「使用说明」：用户手册原文按章拆页。
  * 手册里指向其它设计分册的链接（architecture.md 等）会降级为纯文本 ——
@@ -15,7 +17,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const SITE_ROOT = path.resolve(import.meta.dirname, '..');
-const SOURCE = process.env.HERON_MANUAL ?? path.resolve(SITE_ROOT, '../heron/docs/user-manual.md');
+const SOURCE = process.env.HERON_MANUAL ?? path.join(SITE_ROOT, 'docs/user-manual.md');
 const OUT_DIR = path.join(SITE_ROOT, 'src/content/manual');
 
 /** 章节号 → URL slug。顺序即侧边目录的顺序。 */
@@ -52,7 +54,7 @@ if (!fs.existsSync(SOURCE)) {
     process.exit(0);
   }
   console.error(`[build-content] 找不到源文件：${SOURCE}`);
-  console.error('[build-content] 请把 heron 仓库放在同级目录，或用 HERON_MANUAL 指定手册路径。');
+  console.error('[build-content] 请确认仓库内的 docs/user-manual.md 存在，或用 HERON_MANUAL 指定手册路径。');
   process.exit(1);
 }
 

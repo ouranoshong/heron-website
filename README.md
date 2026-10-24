@@ -68,7 +68,7 @@ SITE_URL=https://heron.bytebits.top npm run deploy
 
 ## 内容管线
 
-`scripts/build-content.mjs` 从 `../heron/docs/user-manual.md`（可用 `HERON_MANUAL` 环境变量覆盖）读取：
+手册原文随仓库一起放在 `docs/user-manual.md`，`scripts/build-content.mjs` 从它读取：
 
 1. 按「## N. 标题」切成 10 个文件 → `src/content/manual/`
 2. 丢掉原文的「## 目录」——站内由侧边目录代替
@@ -77,6 +77,19 @@ SITE_URL=https://heron.bytebits.top npm run deploy
    **降级为纯文本** —— 那些是设计细节，本站不展示，也不留死链
 
 `src/content/manual/` 是生成物，不要手工编辑。
+
+**手册更新了怎么同步**：把 heron 仓库里的最新版复制过来再构建 ——
+
+```bash
+cp ../heron/docs/user-manual.md docs/user-manual.md
+SITE_URL=https://heron.bytebits.top npm run deploy
+```
+
+或者不动仓库里的副本，直接临时指向 heron 仓库构建一次（适合本地验证，不适合发布）：
+
+```bash
+HERON_MANUAL=../heron/docs/user-manual.md npm run build
+```
 
 ## 页面
 
