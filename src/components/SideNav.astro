@@ -1,0 +1,236 @@
+---
+interface Item {
+  href: string;
+  label: string;
+  note?: string;
+}
+
+interface Section {
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  items: Item[];
+  currentHref: string;
+  sections?: Section[];
+  back?: { href: string; label: string };
+  listLabel?: string;
+  sectionsLabel?: string;
+}
+
+const { items, currentHref, sections = [], back, listLabel = '目录', sectionsLabel = '本章小节' } =
+  Astro.props;
+---
+
+<aside class="sidebar">
+  <div class="sidebar__inner">
+    {back && <a href={back.href} class="sidebar__back">← {back.label}</a>}
+
+    <p class="sidebar__label sidebar__label--toc">{listLabel}</p>
+    <ol class="sidebar__list">
+      {
+        items.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class:list={['sidebar__link', { 'is-current': item.href === currentHref }]}
+              aria-current={item.href === currentHref ? 'page' : undefined}
+            >
+              <span class="sidebar__text">{item.label}</span>
+              {item.note && <span class="sidebar__note">{item.note}</span>}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+
+    {
+      sections.length > 0 && (
+        <>
+          <p class="sidebar__label sidebar__label--sub">{sectionsLabel}</p>
+          <ul class="sidebar__sections">
+            {sections.map((s) => (
+              <li>
+                <a href={`#${s.slug}`} data-toc={s.slug}>
+                  {s.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
+  </div>
+</aside>
+
+<style>
+  .sidebar {
+    flex: 0 0 268px;
+  }
+
+  .sidebar__inner {
+    position: sticky;
+    top: calc(var(--header-h) + 24px);
+    max-height: calc(100vh - var(--header-h) - 48px);
+    overflow-y: auto;
+    padding-right: 8px;
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .sidebar__back {
+    font-size: 13.5px;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+
+  .sidebar__back:hover {
+    color: var(--accent);
+  }
+
+  .sidebar__label {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-family: var(--font-mono);
+    margin-top: 6px;
+  }
+
+  .sidebar__label--sub {
+    margin-top: 18px;
+  }
+
+  .sidebar__list {
+    display: grid;
+    gap: 1px;
+  }
+
+  .sidebar__link {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .sidebar__link:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .sidebar__link.is-current {
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .sidebar__text {
+    flex: 1 1 auto;
+  }
+
+  .sidebar__note {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+
+  .sidebar__link.is-current .sidebar__note {
+    color: var(--accent);
+  }
+
+  .sidebar__sections {
+    display: grid;
+    gap: 1px;
+    border-left: 1px solid var(--border);
+    margin-left: 10px;
+    padding-left: 6px;
+  }
+
+  .sidebar__sections a {
+    display: block;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-faint);
+    line-height: 1.5;
+  }
+
+  .sidebar__sections a:hover {
+    color: var(--text-muted);
+  }
+
+  .sidebar__sections a.is-active {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  @media (max-width: 1000px) {
+    .sidebar {
+      flex: 1 1 auto;
+    }
+
+    .sidebar__inner {
+      position: static;
+      max-height: none;
+      gap: 0;
+    }
+
+    /* 窄屏不铺开完整目录 —— 正文优先，全目录在索引页里 */
+    .sidebar__label--toc,
+    .sidebar__label--sub,
+    .sidebar__list,
+    .sidebar__sections {
+      display: none;
+    }
+
+    .sidebar__back {
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+  }
+</style>
+
+<script>
+  // 小节高亮：取「最后一个已经滚过判定线的小节」。
+  // 不用 IntersectionObserver —— 两个标题都离开判定带时它会失焦，
+  // 这里用滚动位置直接判定，行为可预期。
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')];
+  const targets = links
+    .map((l) => document.getElementById(l.dataset.toc ?? ''))
+    .filter((el): el is HTMLElement => Boolean(el));
+
+  if (targets.length) {
+    const LINE = 140; // 判定线：视口顶部往下 140px
+    let ticking = false;
+
+    const update = () => {
+      ticking = false;
+      let current = targets[0];
+      for (const target of targets) {
+        if (target.getBoundingClientRect().top <= LINE) current = target;
+        else break;
+      }
+      // 已经滚到底：把最后一节点亮
+      if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) {
+        current = targets[targets.length - 1];
+      }
+      links.forEach((l) => l.classList.toggle('is-active', l.dataset.toc === current.id));
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+  }
+</script>

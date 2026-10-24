@@ -1,0 +1,163 @@
+---
+const year = new Date().getFullYear();
+
+const groups = [
+  {
+    title: '手册',
+    links: [
+      { href: '/manual', label: '用户手册' },
+      { href: '/manual/quickstart', label: '五分钟快速上手' },
+      { href: '/manual/interface', label: '界面使用' },
+    ],
+  },
+  {
+    title: '查阅',
+    links: [
+      { href: '/manual/config', label: '配置手册' },
+      { href: '/manual/security', label: '安全与审批模型' },
+      { href: '/manual/commands', label: '命令速查' },
+    ],
+  },
+];
+---
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="footer__brand">
+      <div class="footer__logo">
+        <svg viewBox="0 0 48 48" width="20" height="20" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="footBrand" x1="14" y1="8" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#dcfd35"></stop>
+              <stop offset="0.5" stop-color="#dcfd35"></stop>
+              <stop offset="1" stop-color="#dcfd35"></stop>
+            </linearGradient>
+          </defs>
+          <g transform="translate(24 24) scale(1.16) translate(-32.9 -26.8)">
+            <path
+              fill="url(#footBrand)"
+              fill-rule="evenodd"
+              d="M46.2 15.4 L32.6 12.2 C29.4 11.8 27.8 14.6 29.4 16.7 C31.6 20.1 27.4 24.9 26.4 30.5 C25.6 35.1 27 38.9 29.8 41.9 L24.2 41.9 C21.4 38.7 20.2 34 21.4 29.2 C22.5 24.8 26.8 21.1 30.8 18.3 L36.9 17.7 Z M33.7 14.2 m-1.45 0 a1.45 1.45 0 1 0 2.9 0 a1.45 1.45 0 1 0 -2.9 0"
+            ></path>
+          </g>
+        </svg>
+        <span>heron</span>
+      </div>
+      <p class="faint">
+        跑在本地、配置是文件的多 Agent 运行时。<br />
+        「长久静立，瞬间精准出手。」
+      </p>
+    </div>
+
+    {
+      groups.map((group) => (
+        <div class="footer__col">
+          <h4>{group.title}</h4>
+          <ul>
+            {group.links.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+
+    <div class="footer__col">
+      <h4>技术栈</h4>
+      <ul class="footer__tags">
+        <li><span class="badge badge--brand">Go 1.27</span></li>
+        <li><span class="badge badge--cyan">SSE</span></li>
+        <li><span class="badge">React</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="container footer__bottom">
+    <span class="faint">© {year} heron</span>
+    <span class="faint">内容依据 heron 用户手册整理</span>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: clamp(44px, 6vw, 72px) 0 28px;
+    background: linear-gradient(180deg, transparent, rgba(126, 20, 255, 0.05));
+  }
+
+  .footer__inner {
+    display: grid;
+    grid-template-columns: 1.6fr repeat(3, 1fr);
+    gap: 40px;
+    padding-bottom: 40px;
+  }
+
+  .footer__logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 17px;
+    margin-bottom: 14px;
+  }
+
+  .footer__brand p {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .footer__col h4 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+
+  .footer__col ul {
+    display: grid;
+    gap: 10px;
+  }
+
+  .footer__col a {
+    font-size: 14.5px;
+    color: var(--text-muted);
+    transition: color 0.16s ease;
+  }
+
+  .footer__col a:hover {
+    color: var(--accent);
+  }
+
+  .footer__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .footer__bottom {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 880px) {
+    .footer__inner {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 32px;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .footer__inner {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

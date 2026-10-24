@@ -1,0 +1,36 @@
+---
+import { Code } from 'astro:components';
+
+interface Props {
+  code: string;
+  lang?: string;
+  title?: string;
+}
+
+const { code, lang = 'bash', title } = Astro.props;
+---
+
+<div class="code">
+  {
+    title && (
+      <div class="code__head">
+        <span class="code__dot" />
+        <span class="code__dot" />
+        <span class="code__dot" />
+        <span style="margin-left: 6px">{title}</span>
+      </div>
+    )
+  }
+  <Code code={code.trim()} lang={lang} theme="github-dark" />
+</div>
+
+<style>
+  .code :global(pre.astro-code) {
+    margin: 0;
+    padding: 18px 20px;
+    background: transparent;
+    overflow-x: auto;
+    line-height: 1.7;
+    font-size: 13.5px;
+  }
+</style>

@@ -1,0 +1,320 @@
+---
+// 可交互的审批卡演示：复刻 heron 界面里 HITL 的真实形态（见用户手册 §3.4）。
+// Approve → 从 checkpoint 继续；Reject → 理由可留空（服务端不强制），但写了会回灌给模型。
+---
+
+<div class="demo" data-demo>
+  <div class="demo__bar">
+    <span class="demo__dot"></span>
+    <span class="demo__dot"></span>
+    <span class="demo__dot"></span>
+    <span class="demo__title">heron · session 4f2c</span>
+  </div>
+
+  <div class="demo__body">
+    <div class="msg msg--user">
+      <div class="msg__who">你</div>
+      <p>把 internal/config.go 里的端口改成 9090</p>
+    </div>
+
+    <div class="msg msg--agent">
+      <div class="msg__who">coder</div>
+      <p>先确认一下当前实现。</p>
+      <div class="tool">
+        <span class="tool__name">read_file</span>
+        <span class="tool__arg">internal/config.go</span>
+        <span class="tool__ok">✓</span>
+      </div>
+    </div>
+
+    <!-- 审批卡 -->
+    <div class="approval" data-approval>
+      <div class="approval__head">
+        <span class="approval__icon">⚠</span>
+        <div>
+          <strong>Approval required</strong>
+          <p>The agent is paused until you respond.</p>
+        </div>
+      </div>
+
+      <div class="approval__body">
+        <div class="approval__tool">write_file</div>
+        <div class="approval__meta">Requested by <strong>coder</strong></div>
+        <code class="approval__path">/your/project/internal/config.go</code>
+      </div>
+
+      <div class="approval__actions" data-approve-actions>
+        <button class="btn btn--primary btn--sm" data-approve>Approve</button>
+        <button class="btn btn--ghost btn--sm" data-reject>Reject</button>
+      </div>
+
+      <form class="approval__reject" data-reject-form hidden>
+        <label for="reject-reason">拒绝可以不带理由，但建议写 —— 理由会回灌给模型，它据此改路</label>
+        <textarea id="reject-reason" rows="2" placeholder="例如：不要改这个文件，端口在 config.yaml 里统一管理（留空也能拒）"></textarea>
+        <button class="btn btn--ghost btn--sm" type="submit">拒绝并回灌理由</button>
+      </form>
+    </div>
+
+    <!-- Approve 之后 -->
+    <div class="msg msg--agent" data-after-approve hidden>
+      <div class="msg__who">coder</div>
+      <p class="ok-line">✓ 已批准 · 从 checkpoint 恢复，继续执行</p>
+      <div class="tool">
+        <span class="tool__name">write_file</span>
+        <span class="tool__arg">internal/config.go</span>
+        <span class="tool__ok">✓</span>
+      </div>
+      <p>端口已改为 <code>9090</code>，其余配置未动。</p>
+    </div>
+
+    <!-- Reject 之后 -->
+    <div class="msg msg--agent" data-after-reject hidden>
+      <div class="msg__who">coder</div>
+      <p class="warn-line" data-reject-result>✕ 已拒绝 · 理由已回灌给模型</p>
+      <p data-reject-reply>收到，那这个端口我不动了 —— 你说的对，它由 <code>config.yaml</code> 统一管理。要我改那边吗？</p>
+    </div>
+  </div>
+</div>
+
+<style>
+  .demo {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px rgba(126, 20, 255, 0.6);
+  }
+
+  .demo__bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .demo__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--border-strong);
+  }
+
+  .demo__title {
+    margin-left: 8px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+
+  .demo__body {
+    padding: 22px;
+    display: grid;
+    gap: 16px;
+  }
+
+  .msg__who {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 5px;
+  }
+
+  .msg p {
+    font-size: 14.5px;
+    color: var(--text-muted);
+  }
+
+  .msg--user p {
+    color: var(--text);
+  }
+
+  .msg code {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+
+  .ok-line {
+    color: var(--accent) !important;
+  }
+
+  .warn-line {
+    color: var(--danger) !important;
+  }
+
+  .tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 7px 13px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.03);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  .tool__name {
+    color: var(--accent);
+  }
+
+  .tool__arg {
+    color: var(--text-faint);
+  }
+
+  .tool__ok {
+    color: var(--accent);
+  }
+
+  .approval {
+    border: 1px solid var(--accent-line);
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    padding: 20px;
+  }
+
+  .approval__head {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .approval__icon {
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--accent);
+  }
+
+  .approval__head strong {
+    font-size: 15px;
+    color: var(--text);
+  }
+
+  .approval__head p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+  }
+
+  .approval__body {
+    margin: 16px 0 18px;
+    padding-left: 29px;
+  }
+
+  .approval__tool {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--accent);
+  }
+
+  .approval__meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 3px 0 7px;
+  }
+
+  .approval__meta strong {
+    color: var(--text);
+  }
+
+  .approval__path {
+    display: inline-block;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+
+  .approval__actions {
+    display: flex;
+    gap: 10px;
+    padding-left: 29px;
+  }
+
+  .approval__reject {
+    display: grid;
+    gap: 10px;
+    padding-left: 29px;
+    margin-top: 4px;
+  }
+
+  .approval__reject label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .approval__reject textarea {
+    width: 100%;
+    resize: vertical;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+
+  .approval__reject textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .approval__reject button {
+    justify-self: start;
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-demo]').forEach((root) => {
+    const approval = root.querySelector<HTMLElement>('[data-approval]');
+    const actions = root.querySelector<HTMLElement>('[data-approve-actions]');
+    const afterApprove = root.querySelector<HTMLElement>('[data-after-approve]');
+    const afterReject = root.querySelector<HTMLElement>('[data-after-reject]');
+    const rejectForm = root.querySelector<HTMLFormElement>('[data-reject-form]');
+
+    root.querySelector('[data-approve]')?.addEventListener('click', () => {
+      actions?.setAttribute('hidden', '');
+      approval?.setAttribute('hidden', '');
+      afterApprove?.removeAttribute('hidden');
+      afterApprove?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+
+    root.querySelector('[data-reject]')?.addEventListener('click', () => {
+      actions?.setAttribute('hidden', '');
+      rejectForm?.removeAttribute('hidden');
+      rejectForm?.querySelector('textarea')?.focus();
+    });
+
+    rejectForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const reason = rejectForm.querySelector('textarea')?.value.trim();
+      approval?.setAttribute('hidden', '');
+      // 理由可留空：服务端不强制，界面也不拦 —— 只是空理由对模型等于凭空断路
+      const result = root.querySelector<HTMLElement>('[data-reject-result]');
+      const reply = root.querySelector<HTMLElement>('[data-reject-reply]');
+      if (reason) {
+        if (result) result.textContent = '✕ 已拒绝 · 理由已回灌给模型';
+        if (reply) {
+          reply.innerHTML =
+            '收到，那这个端口我不动了 —— 你说的对，它由 <code>config.yaml</code> 统一管理。要我改那边吗？';
+        }
+      } else {
+        if (result) result.textContent = '✕ 已拒绝 · 这次没写理由';
+        if (reply) {
+          reply.innerHTML =
+            '好，那我先停在这儿。不过这次没带理由 —— 我只能靠猜，比如「端口别动，走配置」这类猜测容易跑偏，下次拒绝时补一句会更准。';
+        }
+      }
+      afterReject?.removeAttribute('hidden');
+      afterReject?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+  });
+</script>

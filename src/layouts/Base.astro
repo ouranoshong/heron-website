@@ -1,0 +1,55 @@
+---
+import '@fontsource/questrial';
+import '../styles/global.css';
+import '../styles/effects.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+
+// 有真实域名时给 og:image 补绝对地址，没有就用相对路径。
+const ogImage = Astro.site ? new URL('/og.png', Astro.site).href : '/og.png';
+// canonical 同理：每页指到自己的绝对地址。
+// build.format 为 file 时 Astro.url.pathname 是产物路径（/manual/x.html），
+// 这里去掉 .html / index.html，还原成对外的干净 URL。
+const route = Astro.url.pathname.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+const canonical = Astro.site ? new URL(route, Astro.site).href : route;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#08060d" />
+  </head>
+  <body>
+    <div class="aura"></div>
+    <div class="grid-overlay"></div>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+
+    <script>
+      import '../scripts/enter';
+    </script>
+  </body>
+</html>

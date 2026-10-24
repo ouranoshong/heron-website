@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="heron">
+  <title>heron</title>
+  <!-- 徽章版：应用图标 / PWA / 方形场景 -->
+  <defs>
+    <linearGradient id="heronBrandBadge" x1="14" y1="8" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#dcfd35" />
+      <stop offset=".5" stop-color="#dcfd35" />
+      <stop offset="1" stop-color="#dcfd35" />
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="#07061f" stroke="rgba(238,238,238,.16)" />
+  <g transform="translate(24 24) scale(1.02) translate(-32.9 -26.8)">
+    <path
+      fill="url(#heronBrandBadge)"
+      fill-rule="evenodd"
+      d="M46.2 15.4 L32.6 12.2 C29.4 11.8 27.8 14.6 29.4 16.7 C31.6 20.1 27.4 24.9 26.4 30.5 C25.6 35.1 27 38.9 29.8 41.9 L24.2 41.9 C21.4 38.7 20.2 34 21.4 29.2 C22.5 24.8 26.8 21.1 30.8 18.3 L36.9 17.7 Z M33.7 14.2 m-1.45 0 a1.45 1.45 0 1 0 2.9 0 a1.45 1.45 0 1 0 -2.9 0"
+    />
+  </g>
+</svg>

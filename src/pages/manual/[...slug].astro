@@ -1,0 +1,156 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import SideNav from '../../components/SideNav.astro';
+
+export async function getStaticPaths() {
+  const entries = (await getCollection('manual')).sort((a, b) => a.data.order - b.data.order);
+  return entries.map((entry, i) => ({
+    params: { slug: entry.data.slug },
+    props: {
+      entry,
+      prev: entries[i - 1] ?? null,
+      next: entries[i + 1] ?? null,
+    },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<'manual'>;
+  prev: CollectionEntry<'manual'> | null;
+  next: CollectionEntry<'manual'> | null;
+}
+
+const { entry, prev, next } = Astro.props;
+const { Content, headings } = await render(entry);
+
+const all = (await getCollection('manual')).sort((a, b) => a.data.order - b.data.order);
+const chapters = all.map((e) => ({
+  href: `/manual/${e.data.slug}`,
+  label: e.data.title,
+  note: e.data.chapter,
+}));
+const sections = headings.filter((h) => h.depth === 2);
+---
+
+<Base
+  title={`第 ${entry.data.chapter} 章 ${entry.data.title} — heron 用户手册`}
+  description={`heron 用户手册 · ${entry.data.title}`}
+>
+  <div class="container manual-shell">
+    <SideNav
+      items={chapters}
+      currentHref={`/manual/${entry.data.slug}`}
+      sections={sections}
+      back={{ href: '/manual', label: '用户手册' }}
+    />
+
+    <article class="manual-body">
+      <header class="manual-head">
+        <span class="eyebrow">第 {entry.data.chapter} 章</span>
+        <h1>{entry.data.title}</h1>
+      </header>
+
+      <div class="prose">
+        <Content />
+      </div>
+
+      <nav class="pager" aria-label="章节导航">
+        {
+          prev ? (
+            <a href={`/manual/${prev.data.slug}`} class="pager__link pager__link--prev">
+              <span class="pager__dir">← 上一章</span>
+              <span class="pager__title">{prev.data.title}</span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        {
+          next ? (
+            <a href={`/manual/${next.data.slug}`} class="pager__link pager__link--next">
+              <span class="pager__dir">下一章 →</span>
+              <span class="pager__title">{next.data.title}</span>
+            </a>
+          ) : (
+            <span />
+          )
+        }
+      </nav>
+    </article>
+  </div>
+</Base>
+
+<style>
+  .manual-shell {
+    display: flex;
+    gap: 56px;
+    align-items: flex-start;
+    padding-top: 40px;
+    padding-bottom: 80px;
+  }
+
+  .manual-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 780px;
+  }
+
+  .manual-head {
+    padding-bottom: 26px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .manual-head h1 {
+    font-size: clamp(28px, 3.6vw, 40px);
+    margin-bottom: 4px;
+  }
+
+  .pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .pager__link {
+    display: grid;
+    gap: 4px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    transition: border-color 0.18s ease, transform 0.18s ease;
+    max-width: 46%;
+  }
+
+  .pager__link:hover {
+    border-color: var(--accent-line);
+    transform: translateY(-1px);
+  }
+
+  .pager__link--next {
+    text-align: right;
+  }
+
+  .pager__dir {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--text-faint);
+  }
+
+  .pager__title {
+    font-size: 15px;
+    color: var(--text);
+  }
+
+  @media (max-width: 1000px) {
+    .manual-shell {
+      flex-direction: column;
+      gap: 32px;
+    }
+  }
+</style>

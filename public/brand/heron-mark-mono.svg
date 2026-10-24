@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="heron">
+  <title>heron</title>
+  <!-- 单色版：用于单色印刷、需要 currentColor 继承的场合 -->
+  <g transform="translate(24 24) scale(1.16) translate(-32.9 -26.8)">
+    <path
+      fill="#dcfd35"
+      fill-rule="evenodd"
+      d="M46.2 15.4 L32.6 12.2 C29.4 11.8 27.8 14.6 29.4 16.7 C31.6 20.1 27.4 24.9 26.4 30.5 C25.6 35.1 27 38.9 29.8 41.9 L24.2 41.9 C21.4 38.7 20.2 34 21.4 29.2 C22.5 24.8 26.8 21.1 30.8 18.3 L36.9 17.7 Z M33.7 14.2 m-1.45 0 a1.45 1.45 0 1 0 2.9 0 a1.45 1.45 0 1 0 -2.9 0"
+    />
+  </g>
+</svg>

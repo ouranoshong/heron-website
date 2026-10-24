@@ -1,0 +1,271 @@
+---
+// 架构示意简图：概念层级，不含实现细节。
+// 分层依据 heron 的架构文档 —— 浏览器 → 接口层 → 编排运行时 → agent → 工具，
+// 事件再沿 AG-UI 流回到浏览器。
+---
+
+<div class="arch" data-enter="flip">
+  <div class="arch__stack">
+    <div class="arch__row">
+      <div class="arch__box arch__box--you">
+        <span class="arch__label">你</span>
+        <span class="arch__desc">浏览器里对话 · 审批 · 传附件</span>
+      </div>
+    </div>
+
+    <div class="arch__link"><span class="arch__link-text">请求</span></div>
+
+    <div class="arch__row">
+      <div class="arch__box">
+        <span class="arch__label">接口层</span>
+        <span class="arch__desc">一条会话一条常驻运行线 · 事件流式回传</span>
+      </div>
+    </div>
+
+    <div class="arch__link"><span class="arch__link-text">编排</span></div>
+
+    <div class="arch__row">
+      <div class="arch__box arch__box--key">
+        <span class="arch__label">运行时</span>
+        <span class="arch__desc">多轮常驻 · 抢占与中止 · 从断点恢复</span>
+      </div>
+    </div>
+
+    <div class="arch__link"><span class="arch__link-text">装配</span></div>
+
+    <div class="arch__row">
+      <div class="arch__box arch__box--key">
+        <span class="arch__label">agent</span>
+        <span class="arch__desc">提示词 · 模型 · 工具 · 子 agent</span>
+      </div>
+    </div>
+
+    <div class="arch__link"><span class="arch__link-text">调用</span></div>
+
+    <div class="arch__row arch__row--tools">
+      <div class="arch__tool">
+        <span class="arch__tool-icon" aria-hidden="true">◔</span>
+        <span class="arch__tool-name">读代码</span>
+        <span class="arch__tool-desc">检索、追调用链</span>
+      </div>
+      <div class="arch__tool arch__tool--gate">
+        <span class="arch__tool-icon" aria-hidden="true">✎</span>
+        <span class="arch__tool-name">改文件 · 执行命令</span>
+        <span class="arch__tool-desc">默认要先点头</span>
+      </div>
+      <div class="arch__tool">
+        <span class="arch__tool-icon" aria-hidden="true">⇄</span>
+        <span class="arch__tool-name">委派子 agent</span>
+        <span class="arch__tool-desc">并行或串行</span>
+      </div>
+      <div class="arch__tool">
+        <span class="arch__tool-icon" aria-hidden="true">⌕</span>
+        <span class="arch__tool-name">检索知识库</span>
+        <span class="arch__tool-desc">带出处引用</span>
+      </div>
+    </div>
+
+    <div class="arch__link arch__link--back">
+      <span class="arch__link-text">事件流回到浏览器</span>
+    </div>
+  </div>
+
+  <div class="arch__note">
+    <span class="arch__note-badge">需要你点头的动作</span>
+    <span class="arch__note-text">
+      走到「改文件 · 执行命令」这类动作时，这一轮当场停住，界面弹出审批卡；
+      你批准，它从断点继续；你拒绝，理由写不写都行，写了会回灌给它让它换条路走。
+    </span>
+  </div>
+</div>
+
+<style>
+  .arch {
+    display: grid;
+    gap: 18px;
+  }
+
+  .arch__stack {
+    display: grid;
+    gap: 0;
+    max-width: 860px;
+    margin-inline: auto;
+  }
+
+  .arch__row {
+    display: grid;
+    place-items: center;
+  }
+
+  .arch__box {
+    display: grid;
+    gap: 5px;
+    justify-items: center;
+    width: min(100%, 440px);
+    padding: 16px 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    text-align: center;
+  }
+
+  .arch__box--you {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+  }
+
+  .arch__box--key {
+    border-color: var(--accent-line);
+  }
+
+  .arch__label {
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    color: var(--text);
+  }
+
+  .arch__desc {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* 竖线在文字处断开，不做遮罩 —— 背景有光晕，遮罩会露馅 */
+  .arch__link {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 48px;
+  }
+
+  .arch__link::before,
+  .arch__link::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    width: 1px;
+    background: var(--border-strong);
+  }
+
+  .arch__link::before {
+    top: 0;
+    height: 13px;
+  }
+
+  .arch__link::after {
+    bottom: 8px;
+    height: 15px;
+  }
+
+  .arch__link-text {
+    position: relative;
+    padding: 0 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+  }
+
+  /* 箭头 */
+  .arch__link-text::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -14px;
+    width: 7px;
+    height: 7px;
+    margin-left: -3px;
+    border-right: 1px solid var(--accent);
+    border-bottom: 1px solid var(--accent);
+    transform: rotate(45deg);
+  }
+
+  /* 回流那条：箭头朝上 */
+  .arch__link--back::before {
+    top: 8px;
+    height: 15px;
+  }
+
+  .arch__link--back::after {
+    bottom: 0;
+    height: 13px;
+  }
+
+  .arch__link--back .arch__link-text::after {
+    bottom: auto;
+    top: -14px;
+    transform: rotate(225deg);
+  }
+
+  .arch__row--tools {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 2px;
+  }
+
+  .arch__tool {
+    display: grid;
+    gap: 4px;
+    justify-items: center;
+    text-align: center;
+    padding: 16px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+
+  .arch__tool--gate {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+  }
+
+  .arch__tool-icon {
+    font-size: 17px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .arch__tool-name {
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .arch__tool-desc {
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .arch__note {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    max-width: 860px;
+    margin-inline: auto;
+    padding: 16px 20px;
+    border: 1px solid var(--accent-line);
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+  }
+
+  .arch__note-badge {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    white-space: nowrap;
+  }
+
+  .arch__note-text {
+    font-size: 14px;
+    color: var(--text-muted);
+    flex: 1 1 320px;
+  }
+
+  @media (max-width: 760px) {
+    .arch__row--tools {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

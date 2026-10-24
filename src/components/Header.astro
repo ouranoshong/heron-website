@@ -1,0 +1,212 @@
+---
+const nav = [
+  { href: '/', label: '首页' },
+  { href: '/manual', label: '用户手册' },
+  { href: '/manual/commands', label: '命令速查' },
+];
+
+const current = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) =>
+  href === '/' ? current === '/' : current === href || current.startsWith(`${href}/`);
+---
+
+<header class="header">
+  <div class="container header__inner">
+    <a href="/" class="brand" aria-label="heron 首页">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="27" height="27" fill="none">
+          <defs>
+            <linearGradient id="headerBrand" x1="14" y1="8" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#dcfd35"></stop>
+              <stop offset="0.5" stop-color="#dcfd35"></stop>
+              <stop offset="1" stop-color="#dcfd35"></stop>
+            </linearGradient>
+          </defs>
+          <g transform="translate(24 24) scale(1.16) translate(-32.9 -26.8)">
+            <path
+              fill="url(#headerBrand)"
+              fill-rule="evenodd"
+              d="M46.2 15.4 L32.6 12.2 C29.4 11.8 27.8 14.6 29.4 16.7 C31.6 20.1 27.4 24.9 26.4 30.5 C25.6 35.1 27 38.9 29.8 41.9 L24.2 41.9 C21.4 38.7 20.2 34 21.4 29.2 C22.5 24.8 26.8 21.1 30.8 18.3 L36.9 17.7 Z M33.7 14.2 m-1.45 0 a1.45 1.45 0 1 0 2.9 0 a1.45 1.45 0 1 0 -2.9 0"
+            ></path>
+          </g>
+        </svg>
+      </span>
+      <span class="brand__name">heron</span>
+    </a>
+
+    <nav class="nav" aria-label="主导航">
+      {
+        nav.map((item) => (
+          <a href={item.href} class:list={['nav__link', { 'is-active': isActive(item.href) }]}>
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="header__actions">
+      <a class="btn btn--primary btn--sm" href="/manual/quickstart">快速开始</a>
+    </div>
+
+    <button class="nav-toggle" type="button" aria-label="打开菜单" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="mobile-nav" hidden>
+    {
+      nav.map((item) => (
+        <a href={item.href} class:list={['mobile-nav__link', { 'is-active': isActive(item.href) }]}>
+          {item.label}
+        </a>
+      ))
+    }
+    <a class="btn btn--primary" href="/manual/quickstart">快速开始</a>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--header-h);
+    backdrop-filter: blur(14px);
+    background: rgba(4, 3, 25, 0.78);
+  }
+
+  /* 参考主题的招牌细节：分隔线从内容左边缘一直延伸到屏幕右边缘 */
+  .header::after {
+    content: '';
+    position: absolute;
+    left: max(24px, calc((100% - var(--container)) / 2));
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .header__inner {
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .brand__mark {
+    display: grid;
+    place-items: center;
+    filter: drop-shadow(0 0 16px rgba(220, 253, 53, 0.35));
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: auto;
+  }
+
+  .nav__link {
+    padding: 7px 13px;
+    border-radius: 999px;
+    font-size: 14.5px;
+    color: var(--text-muted);
+    transition: color 0.16s ease, background 0.16s ease;
+  }
+
+  .nav__link:hover {
+    color: var(--accent);
+  }
+
+  .nav__link.is-active {
+    color: var(--accent);
+  }
+
+  .header__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-toggle {
+    display: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    cursor: pointer;
+    padding: 0;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-toggle span {
+    display: block;
+    width: 16px;
+    height: 1.5px;
+    background: var(--text);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .mobile-nav {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(4, 3, 25, 0.97);
+  }
+
+  .mobile-nav__link {
+    padding: 11px 12px;
+    border-radius: 10px;
+    color: var(--text-muted);
+  }
+
+  .mobile-nav__link.is-active {
+    color: var(--accent);
+  }
+
+  @media (max-width: 880px) {
+    .nav,
+    .header__github {
+      display: none;
+    }
+
+    .nav-toggle {
+      display: flex;
+      margin-left: auto;
+    }
+
+    .header__actions {
+      margin-left: auto;
+    }
+
+    .mobile-nav {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector<HTMLButtonElement>('.nav-toggle');
+  const menu = document.querySelector<HTMLElement>('.mobile-nav');
+  toggle?.addEventListener('click', () => {
+    const open = menu?.hasAttribute('hidden') ?? true;
+    if (open) menu?.removeAttribute('hidden');
+    else menu?.setAttribute('hidden', '');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+</script>

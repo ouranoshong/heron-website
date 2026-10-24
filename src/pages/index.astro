@@ -1,0 +1,649 @@
+---
+import Base from '../layouts/Base.astro';
+import Snippet from '../components/Snippet.astro';
+import ApprovalDemo from '../components/ApprovalDemo.astro';
+import ArchDiagram from '../components/ArchDiagram.astro';
+
+const capabilities = [
+  { name: '多轮持久会话', desc: '每个会话一条常驻运行线，随时接着聊；历史落盘，关掉浏览器再打开还在' },
+  { name: '抢占', desc: 'Agent 回答途中你又发一条，旧的一轮在安全点让位给新的' },
+  { name: '中止', desc: '立刻停掉当前这一轮' },
+  { name: '人工审批（HITL）', desc: '写文件、执行命令等动作在执行前挂起，你批准后从 checkpoint 恢复' },
+  { name: '多 agent 委派', desc: '一个主 agent 把活分给子 agent（只读检索 / 改代码 / 审阅），可并行' },
+  { name: '知识库', desc: '把自己的语料建成索引，agent 用 kb_search 检索并给出来源' },
+  { name: '配置热更新', desc: '改 llm/ agents/ policy/ 保存即生效，不用重启' },
+  { name: '图形化配置编辑器', desc: '界面里直接编辑配置文件，写入前自动校验' },
+  { name: '斜杠命令与技能', desc: '/review、/explain、/fix 等开箱可用；技能可自建' },
+];
+
+const roles = [
+  { role: 'main', job: '只做决策与委派，不自己写文件', write: '否' },
+  { role: 'task', job: '按任务单执行', write: '能' },
+];
+
+const quickstart = `# 构建（前端 + 单文件二进制）
+make build
+
+# 在你的项目里生成最小可运行配置
+cd /your/project && heron init
+
+# 密钥只从环境变量读（出厂默认端点是 deepseek）
+export DEEPSEEK_API_KEY=sk-...
+
+# 启动，打开 http://localhost:8080
+heron`;
+
+const manualChapters = [
+  { href: '/manual/quickstart', title: '五分钟快速上手', note: '第 2 章' },
+  { href: '/manual/interface', title: '界面使用', note: '第 3 章' },
+  { href: '/manual/config', title: '配置手册', note: '第 4 章' },
+  { href: '/manual/multi-agent', title: '多 agent 与委派', note: '第 5 章' },
+  { href: '/manual/security', title: '安全与审批模型', note: '第 7 章' },
+  { href: '/manual/commands', title: '命令速查', note: '第 8 章' },
+];
+---
+
+<Base
+  title="heron — 本地多 Agent 运行时"
+  description="heron 是一个跑在本地、配置是文件的多 Agent 运行时：一组 agent 各带模型、提示词与工具边界，共用一套审批闸门；需要点头的动作会停下来等你批。附完整使用手册。"
+>
+  <!-- ============ Hero ============ -->
+  <section class="hero">
+    <canvas class="hero__scene" data-scene aria-hidden="true"></canvas>
+    <div class="container">
+      <div class="hero__badge">
+        <span class="badge badge--brand">heron</span>
+        <span class="badge">本地优先</span>
+        <span class="badge badge--cyan">多 agent</span>
+      </div>
+
+      <h1 class="hero__title">
+        跑在本地、<span class="text-gradient">配置是文件的</span><br />
+        多 Agent 运行时
+      </h1>
+
+      <p class="hero__lead">
+        一组 agent 跑在你自己机器上，各带模型、提示词与工具边界，共用一套审批闸门。
+        你在浏览器里跟它对话，它能读代码、改文件、跑命令；
+        需要你点头的动作会<span class="hero__hl accent">停下来等你批</span>。
+      </p>
+
+      <div class="hero__actions">
+        <a class="btn btn--primary" href="/manual/quickstart">五分钟跑起来 →</a>
+        <a class="btn btn--ghost" href="/manual">先看看它能做什么</a>
+      </div>
+
+      <p class="hero__note">
+        命名来自苍鹭（heron）：长久静立、瞬间精准出手 —— 对应「持久等待 + 抢占接管」。
+      </p>
+
+      <div class="hero__terminal">
+        <div class="terminal__bar">
+          <span class="terminal__dot"></span>
+          <span class="terminal__dot"></span>
+          <span class="terminal__dot"></span>
+          <span class="terminal__label">~/your-project</span>
+        </div>
+        <pre class="terminal__body"><span class="t-prompt">$</span> heron
+<span class="t-dim">[main] config loaded: version=3f2a1b9c8d0e</span>
+<span class="t-dim">[main] frontend: embedded from web/dist</span>
+
+<span class="t-prompt">&gt;</span> 帮我看看这个仓库的顶层目录
+<span class="t-dim">…</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 核心能力 ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center" data-enter="rise">
+        <span class="eyebrow">Capabilities</span>
+        <h2>九项<span class="accent">核心能力</span></h2>
+        <p>
+          不是「一问一答」的聊天窗口，而是一个能被打断、能恢复、能被审批卡掐住的多轮运行时。
+        </p>
+      </div>
+
+      <div class="grid grid--3">
+        {
+          capabilities.map((c, i) => (
+            <article class="card cap" data-enter="flip" style={`animation-delay:${(i % 3) * 90}ms`}>
+              <h3 class="cap__name">{c.name}</h3>
+              <p class="cap__desc">{c.desc}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 五条硬规则 ============ -->
+  <section class="section section--tight">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Rules</span>
+        <h2>多 agent 运行时最容易出的问题，<span class="accent">heron 把它变成硬规则</span></h2>
+        <p>「谁还能干什么，说不清」是多 agent 系统最常见的翻车方式。这五条是出厂就成立的约束。</p>
+      </div>
+
+      <ol class="rules reveal">
+        <li class="rule">
+          <span class="rule__no">01</span>
+          <div>
+            <h3>工具边界分层，永不合并</h3>
+            <p>
+              外层 <code>policy/permissions.yaml</code> 定全局 <code>ask</code> / <code>deny</code>，
+              内层每个 agent 用自己的 <code>disabled_tools</code> 收窄。
+              外层的 <code>deny</code> 对所有 agent 生效，<strong>子 agent 放松不了它</strong>。
+            </p>
+          </div>
+        </li>
+        <li class="rule">
+          <span class="rule__no">02</span>
+          <div>
+            <h3>委派有深度上限</h3>
+            <p>
+              入口 agent 是第 0 层，深度 d 的 agent 当且仅当 <code>d &lt; max_depth</code> 才能再生子 agent；
+              拓扑超限<strong>启动期就报错</strong>，不静默截断。
+            </p>
+          </div>
+        </li>
+        <li class="rule">
+          <span class="rule__no">03</span>
+          <div>
+            <h3>一个会话能同时跑多个 agent</h3>
+            <p>互不依赖的活并行分派；用量<strong>按 agent 分账</strong>。</p>
+          </div>
+        </li>
+        <li class="rule">
+          <span class="rule__no">04</span>
+          <div>
+            <h3>配置是文件</h3>
+            <p>
+              模型档案、提示词、审批策略都是能读能改的文件：要 review 就 review，
+              要提交进版本库就提交 —— 全放本地、只你自己看，同样跑得好好的。
+            </p>
+          </div>
+        </li>
+        <li class="rule">
+          <span class="rule__no">05</span>
+          <div>
+            <h3>一个二进制，扔哪都能跑</h3>
+            <p>前端嵌在 41MB 的单文件里，跨平台静态编译，运行时没有额外依赖要一起装。</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ 架构示意 ============ -->
+  <section class="section section--tight">
+    <div class="container">
+      <div class="section-head section-head--center" data-enter="rise">
+        <span class="eyebrow">Architecture</span>
+        <h2>架构示意</h2>
+        <p>
+          一条消息从你手里到工具箱，中间只隔几层；干完的动静再沿事件流回到浏览器。
+          层与层之间的事你基本不用管 —— 只有「要不要点头」这一件需要你参与。
+        </p>
+      </div>
+
+      <ArchDiagram />
+    </div>
+  </section>
+
+  <!-- ============ HITL 演示 ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="hitl">
+        <div class="hitl__intro" data-enter="flip">
+          <span class="eyebrow">Human in the loop</span>
+          <h2>它要动手，会<span class="accent">先停下来问</span></h2>
+          <p>
+            当 agent 要调用被标记为 <code>ask</code> 的工具时，轮次会<strong>停住</strong>，
+            输入框被一张审批卡取代。批准后从 checkpoint 继续；拒绝的理由写不写都行，写了会回灌给模型。
+          </p>
+          <ul class="checks">
+            <li>工具三档：<code>allow</code> 放行 / <code>ask</code> 要点头 / <code>deny</code> 不可用</li>
+            <li>判定顺序：<code>deny → ask → 兜底 allow</code></li>
+            <li>外层 <code>deny</code> 是全局禁令，<strong>子 agent 无法放松</strong></li>
+          </ul>
+          <p class="hitl__hint">下面是用户手册里那张卡的真实形态，可以直接点。</p>
+          <a class="btn btn--ghost btn--sm" href="/manual/security">审批模型细节 →</a>
+        </div>
+
+        <div data-enter="fade">
+          <ApprovalDemo />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 出厂 agent ============ -->
+  <section class="section section--tight">
+    <div class="container">
+      <div class="section-head" data-enter="rise">
+        <span class="eyebrow">Multi-agent</span>
+        <h2>出厂就<span class="accent">两个 agent</span>，一套</h2>
+        <p>
+          <code>heron init</code> 写出 <code>main</code> 与 <code>task</code> 两个 agent ——
+          <code>main</code> 的 <code>subagents: [task]</code> 引用 <code>task</code>，
+          少一个就是启动期硬错误，所以总是两个一起写。
+        </p>
+        <p class="roles__more">
+          「谁能写」靠<strong>两层</strong>控制：外层 <code>policy/permissions.yaml</code> 的
+          <code>deny</code>（谁都别想用）＋ 内层各 agent 自己的 <code>disabled_tools</code>。
+          手册里还有一组更细的四角色样例。
+        </p>
+      </div>
+
+      <div class="table-wrap" data-enter="fade">
+        <table>
+          <thead>
+            <tr>
+              <th>角色</th>
+              <th>干什么</th>
+              <th>能写文件吗</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              roles.map((r) => (
+                <tr>
+                  <td>
+                    <code>{r.role}</code>
+                  </td>
+                  <td>{r.job}</td>
+                  <td>
+                    {r.write === '能' ? (
+                      <span class="badge badge--green">能</span>
+                    ) : (
+                      <span class="badge">否</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 快速开始 ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="qs">
+        <div class="qs__text" data-enter="flip">
+          <span class="eyebrow">Get started</span>
+          <h2>五分钟，<span class="accent">跑起来</span></h2>
+          <p>
+            前置只有三样：一个 OpenAI 兼容端点、Go 1.27.1+、bun 1.3+。
+            出厂默认 <code>deepseek</code>，DeepSeek、Kimi、通义、vLLM、Ollama 都行，
+            只要兼容 <code>/chat/completions</code>。
+          </p>
+          <ul class="checks">
+            <li><strong>heron init</strong> 只补继承链上确实缺的东西，不会覆盖你已有的配置</li>
+            <li><strong>密钥只从环境变量读</strong>，yaml 里只放 <code>{'${ENV}'}</code> 引用；出厂默认端点是 <code>deepseek</code></li>
+            <li><strong>改 llm/ agents/ policy/</strong> 保存即生效，server/ 则需要重启</li>
+          </ul>
+          <a class="btn btn--primary" href="/manual/quickstart">完整步骤 →</a>
+        </div>
+
+        <div class="qs__code" data-enter="flip">
+          <Snippet code={quickstart} lang="bash" title="终端" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 使用教程 ============ -->
+  <section class="section section--tight">
+    <div class="container">
+      <div class="section-head" data-enter="rise">
+        <span class="eyebrow">Tutorial</span>
+        <h2><span class="accent">使用教程</span></h2>
+        <p>
+          手册全文按章拆开，左侧目录可直接跳到某一节。下面是最常用的几章，
+          剩下的（知识库、故障排查、HTTP 接口）在手册首页。
+        </p>
+      </div>
+
+      <div class="tutorial">
+        <a href="/manual" class="tutorial__main" data-enter="flip">
+          <span class="badge badge--brand">用户手册</span>
+          <h3>怎么装、怎么配、怎么用</h3>
+          <p>
+            十个章节，从五分钟快速上手开始，到配置手册、审批模型、命令速查和故障排查收尾。
+          </p>
+          <span class="tutorial__more">进入手册 →</span>
+        </a>
+
+        <ul class="tutorial__list" data-enter="flip">
+          {
+            manualChapters.map((c) => (
+              <li>
+                <a href={c.href}>
+                  <span class="tutorial__no">{c.note.replace('第 ', '').replace(' 章', '')}</span>
+                  {c.title}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+  <script>
+    import '../scripts/scene';
+  </script>
+</Base>
+
+<style>
+  /* ---- Hero ---- */
+  .hero {
+    position: relative;
+    padding: clamp(64px, 10vw, 130px) 0 clamp(40px, 6vw, 70px);
+    text-align: center;
+  }
+
+  .hero__scene {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.85;
+  }
+
+  .hero .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero__badge {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
+  }
+
+  .hero__title {
+    font-size: clamp(38px, 7.2vw, 72px);
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+  }
+
+  .hero__lead {
+    max-width: 640px;
+    margin: 0 auto 34px;
+    font-size: clamp(17px, 2.1vw, 22px);
+    color: var(--text-muted);
+  }
+
+  .hero__actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .hero__note {
+    margin-top: 22px;
+    font-size: 13.5px;
+    color: var(--text-faint);
+  }
+
+  .hero__terminal {
+    max-width: 720px;
+    margin: 52px auto 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #07061f;
+    overflow: hidden;
+    text-align: left;
+    box-shadow: 0 30px 80px -46px rgba(126, 20, 255, 0.8);
+  }
+
+  .terminal__bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .terminal__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--border-strong);
+  }
+
+  .terminal__label {
+    margin-left: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .terminal__body {
+    margin: 0;
+    padding: 20px 22px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.85;
+    overflow-x: auto;
+  }
+
+  .t-prompt {
+    color: var(--accent);
+  }
+
+  .t-dim {
+    color: var(--text-faint);
+  }
+
+  /* ---- 能力 ---- */
+  .cap__name {
+    font-size: 16.5px;
+    margin-bottom: 8px;
+  }
+
+  .cap__desc {
+    font-size: 14.5px;
+    color: var(--text-muted);
+  }
+
+  /* ---- HITL ---- */
+  .hitl {
+    display: grid;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .hitl__intro h2 {
+    font-size: clamp(26px, 3.4vw, 38px);
+    margin-bottom: 16px;
+  }
+
+  .hitl__intro p {
+    color: var(--text-muted);
+    font-size: 15.5px;
+  }
+
+  .hitl__intro code {
+    color: var(--accent);
+  }
+
+  .hitl__intro strong {
+    color: var(--text);
+  }
+
+  .hitl__hint {
+    margin: 18px 0 22px;
+    font-size: 13.5px;
+    color: var(--text-faint);
+  }
+
+  /* ---- 快速开始 ---- */
+  .qs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .qs__text h2 {
+    font-size: clamp(26px, 3.4vw, 38px);
+    margin-bottom: 16px;
+  }
+
+  .qs__text > p {
+    color: var(--text-muted);
+    font-size: 15.5px;
+    margin-bottom: 22px;
+  }
+
+  .qs__text code {
+    color: var(--accent);
+  }
+
+  .qs__text .checks {
+    margin-bottom: 26px;
+  }
+
+  /* ---- 五条硬规则 ---- */
+  .rules {
+    display: grid;
+    gap: 2px;
+    counter-reset: rule;
+  }
+
+  .rule {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 20px;
+    align-items: start;
+    padding: 22px 24px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .rule__no {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    padding-top: 3px;
+  }
+
+  .rule h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+
+  .rule p {
+    font-size: 14.5px;
+    color: var(--text-muted);
+  }
+
+  .rule code {
+    color: var(--accent);
+  }
+
+  .rule strong {
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .roles__more {
+    margin-top: 14px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* ---- 教程入口 ---- */
+  .tutorial {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .tutorial__main {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+    padding: 26px;
+    border: 1px solid var(--accent-line);
+    border-radius: var(--radius);
+    background:
+      radial-gradient(28rem 14rem at 0% 0%, rgba(220, 253, 53, 0.1), transparent 70%),
+      var(--surface);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .tutorial__main:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .tutorial__main h3 {
+    font-size: 20px;
+  }
+
+  .tutorial__main p {
+    font-size: 14.5px;
+    color: var(--text-muted);
+  }
+
+  .tutorial__more {
+    font-size: 13.5px;
+    color: var(--accent);
+  }
+
+  .tutorial__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+  }
+
+  .tutorial__list a {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .tutorial__list a:hover {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .tutorial__no {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    min-width: 16px;
+  }
+
+  @media (max-width: 900px) {
+    .hitl,
+    .qs,
+    .tutorial {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+  }
+</style>
