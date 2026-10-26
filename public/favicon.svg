@@ -1,17 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="heron">
   <title>heron</title>
+  <!--
+    徽章版：深底圆角方块 + 标识。
+    浏览器标签页的明暗主题、以及浅色页面上的 favicon，都需要深底才读得出青柠色。
+  -->
   <defs>
-    <linearGradient id="heronBrand" x1="14" y1="8" x2="40" y2="44" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#dcfd35" />
-      <stop offset=".5" stop-color="#dcfd35" />
-      <stop offset="1" stop-color="#dcfd35" />
+    <linearGradient id="heronBadgeBrand" x1="8" y1="4" x2="40" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e6ff5c" />
+      <stop offset=".55" stop-color="#dcfd35" />
+      <stop offset="1" stop-color="#8fe3ff" />
     </linearGradient>
+    <mask id="heronBadgeCut" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+      <path
+        fill="#fff"
+        d="M46.4 15.2 L32.5 12.0 C29.1 11.5 27.5 14.5 29.2 16.7 C31.5 20.2 27.9 24.6 26.9 29.6 L22.2 29.6 C22.9 24.4 26.6 20.4 30.6 17.8 L36.9 17.3 Z"
+      />
+      <path
+        fill="#fff"
+        d="M26.9 29.6 C26.1 34.2 27.2 38.6 29.9 41.9 L23.7 41.9 C20.7 38.3 19.4 33.4 20.8 28.6 L22.2 29.6 Z"
+      />
+      <g fill="#000">
+        <circle cx="33.5" cy="13.9" r="1.8" />
+        <rect x="22.75" y="29.1" width="2.2" height="2.2" />
+        <rect x="23.3" y="30.2" width="1.35" height="6.4" />
+        <rect x="22.75" y="35.4" width="2.2" height="2.2" />
+        <rect x="24.65" y="33.55" width="1.4" height="1.4" />
+        <rect x="25.35" y="32.85" width="2.2" height="2.2" />
+      </g>
+    </mask>
   </defs>
-  <g transform="translate(24 24) scale(1.16) translate(-32.9 -26.8)">
-    <path
-      fill="url(#heronBrand)"
-      fill-rule="evenodd"
-      d="M46.2 15.4 L32.6 12.2 C29.4 11.8 27.8 14.6 29.4 16.7 C31.6 20.1 27.4 24.9 26.4 30.5 C25.6 35.1 27 38.9 29.8 41.9 L24.2 41.9 C21.4 38.7 20.2 34 21.4 29.2 C22.5 24.8 26.8 21.1 30.8 18.3 L36.9 17.7 Z M33.7 14.2 m-1.45 0 a1.45 1.45 0 1 0 2.9 0 a1.45 1.45 0 1 0 -2.9 0"
-    />
+
+  <rect x="1.5" y="1.5" width="45" height="45" rx="11" fill="#07061f" />
+  <rect x="1.5" y="1.5" width="45" height="45" rx="11" fill="none" stroke="rgba(238,238,238,.16)" />
+
+  <g transform="translate(-1.5 -1)">
+    <rect width="48" height="48" fill="url(#heronBadgeBrand)" mask="url(#heronBadgeCut)" />
+    <g stroke="url(#heronBadgeBrand)" stroke-width="1.75" fill="none" stroke-linejoin="miter">
+      <path d="M33.4 13.6 L33.4 8.4 L38.4 8.4" />
+    </g>
+    <rect x="37.5" y="6.95" width="2.7" height="2.7" fill="url(#heronBadgeBrand)" />
+    <circle cx="43.1" cy="8.4" r="1.25" fill="#8fe3ff" />
   </g>
 </svg>

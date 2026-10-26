@@ -1,0 +1,62 @@
+---
+// heron 标识：苍鹭侧影（自然）+ 电路天线与颈部通道（科技）。
+// 与 public/brand/heron-mark.svg 同一套图形，这里内联以便跟随站点配色。
+interface Props {
+  size?: number;
+  title?: string;
+  /** 同一页可能出现多个标识，用它给渐变/遮罩的 id 加前缀，避免 id 重复 */
+  uid?: string;
+}
+
+const { size = 28, title = 'heron', uid = 'a' } = Astro.props;
+---
+
+<svg
+  viewBox="0 0 48 48"
+  width={size}
+  height={size}
+  fill="none"
+  role="img"
+  aria-label={title}
+  class="brand-svg"
+>
+  <defs>
+    <linearGradient id={`brandMarkGrad-${uid}`} x1="10" y1="6" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e6ff5c"></stop>
+      <stop offset=".55" stop-color="#dcfd35"></stop>
+      <stop offset="1" stop-color="#8fe3ff"></stop>
+    </linearGradient>
+    <mask id={`brandMarkCut-${uid}`} maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+      <path
+        fill="#fff"
+        d="M46.4 15.2 L32.5 12.0 C29.1 11.5 27.5 14.5 29.2 16.7 C31.5 20.2 27.9 24.6 26.9 29.6 L22.2 29.6 C22.9 24.4 26.6 20.4 30.6 17.8 L36.9 17.3 Z"
+      ></path>
+      <path
+        fill="#fff"
+        d="M26.9 29.6 C26.1 34.2 27.2 38.6 29.9 41.9 L23.7 41.9 C20.7 38.3 19.4 33.4 20.8 28.6 L22.2 29.6 Z"
+      ></path>
+      <g fill="#000">
+        <circle cx="33.5" cy="13.9" r="1.8"></circle>
+        <rect x="22.75" y="29.1" width="2.2" height="2.2"></rect>
+        <rect x="23.3" y="30.2" width="1.35" height="6.4"></rect>
+        <rect x="22.75" y="35.4" width="2.2" height="2.2"></rect>
+        <rect x="24.65" y="33.55" width="1.4" height="1.4"></rect>
+        <rect x="25.35" y="32.85" width="2.2" height="2.2"></rect>
+      </g>
+    </mask>
+  </defs>
+
+  <rect width="48" height="48" fill={`url(#brandMarkGrad-${uid})`} mask={`url(#brandMarkCut-${uid})`}></rect>
+
+  <g stroke={`url(#brandMarkGrad-${uid})`} stroke-width="1.75" fill="none" stroke-linejoin="miter">
+    <path d="M33.4 13.6 L33.4 8.4 L38.4 8.4"></path>
+  </g>
+  <rect x="37.5" y="6.95" width="2.7" height="2.7" fill={`url(#brandMarkGrad-${uid})`}></rect>
+  <circle cx="43.1" cy="8.4" r="1.25" fill="#8fe3ff"></circle>
+</svg>
+
+<style>
+  .brand-svg {
+    overflow: visible;
+  }
+</style>
